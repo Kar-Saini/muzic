@@ -1,4 +1,4 @@
-import prisma from "@/app/utils/utils";
+import prisma from "@/app/_utils/utils";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";

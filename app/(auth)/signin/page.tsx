@@ -1,40 +1,64 @@
 "use client";
-import { signIn } from "next-auth/react";
-import { ChangeEvent, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { ChangeEvent, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 export default function SignInPage() {
+  const session = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formState, setFormState] = useState<"register" | "signin">("register");
+  const [formState, setFormState] = useState<"register" | "signin">("signin");
+
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      router.push("/");
+    }
+  }, [router, session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (formState === "register") {
-      const result = await axios.post("/api/register", {
-        username,
-        email,
-        password,
-      });
-      if (result.status === 200) toast.success(result.data.message);
-      else {
-        console.log(result.respone);
-        toast.error(result.data.message);
+    try {
+      if (formState === "register") {
+        const result = await axios.post("/api/register", {
+          username,
+          email,
+          password,
+        });
+        if (result.status === 200) {
+          toast.success(result.data.message);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const signInResult = await signIn("credentials", {
+            redirect: false,
+            email,
+            password,
+          });
+
+          if (signInResult?.error) toast.error(signInResult.error);
+          else toast.success("Logged in");
+        } else {
+          toast.error(result.data.message);
+        }
+      } else {
+        const signInResult = await signIn("credentials", {
+          redirect: false,
+          email,
+          password,
+        });
+        if (signInResult?.error) toast.error(signInResult.error);
+        else toast.success("Logged in");
       }
+    } catch (error) {
+      console.error("Error during authentication:", error);
+      toast.error("Something went wrong");
+    } finally {
       setLoading(false);
-    } else {
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-      if (result?.error) toast.error(result.error);
-      else toast.success("Logged in");
     }
-    setLoading(false);
   };
 
   const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +70,7 @@ export default function SignInPage() {
   const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUsername(event.target.value);
   };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
@@ -154,7 +179,8 @@ function FormInputElement({
         type={label}
         placeholder={placeholder}
         required
-        className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-200"
+        className="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1
+         focus:ring-blue-500 focus:border-blue-200"
         value={value}
         onChange={(event) => {
           onChange(event);

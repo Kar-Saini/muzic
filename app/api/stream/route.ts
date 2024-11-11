@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
-import prisma from "@/app/utils/utils";
+import prisma from "@/app/_utils/utils";
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 const streamInput = z
   .object({

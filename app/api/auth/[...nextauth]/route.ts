@@ -1,6 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import Github from "next-auth/providers/github";
-import prisma from "@/app/utils/utils";
+import prisma from "@/app/_utils/utils";
 import brcypt from "bcrypt";
 import NextAuth, { AuthOptions } from "next-auth";
 
@@ -19,13 +19,12 @@ export const authOptions: AuthOptions = {
             where: { email: credentials.email },
           });
           if (!userExists) return null;
-          const hashedPassword = await brcypt.hash(credentials.password, 10);
           if (
             userExists.authProvider === "Credentials" &&
             userExists.password
           ) {
             const isPasswordValid = await brcypt.compare(
-              hashedPassword,
+              credentials.password,
               userExists.password
             );
             if (!isPasswordValid) return null;
@@ -47,6 +46,23 @@ export const authOptions: AuthOptions = {
   ],
   pages: {
     signIn: "/signin",
+  },
+  session: { strategy: "jwt" },
+  secret: process.env.JWT_SECRET || "secret",
+  callbacks: {
+    async jwt({ user, token }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+
+      return session;
+    },
   },
 };
 

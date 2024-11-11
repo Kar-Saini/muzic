@@ -14,13 +14,14 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
   username     String?
   password     String?
   authProvider Provider
-  streams Stream[]
-  upvotes Upvotes[]
+  streams      Stream[]
+  upvotes      Upvotes[]
+  spaces       Space[]
 }
 
 enum Provider {
@@ -30,19 +31,22 @@ enum Provider {
 }
 
 model Stream {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   userId      String
   url         String
   extractedId String
-  type         StreamType
-  active      Boolean   @default(true)
-  user        User      @relation(fields: [userId], references: [id])
+  type        StreamType
+  active      Boolean    @default(true)
+  user        User       @relation(fields: [userId], references: [id])
   upvotes     Upvotes[]
+  spaces      Space[]
 }
-enum StreamType{
+
+enum StreamType {
   Youtube
   Spotify
 }
+
 model Upvotes {
   id       String @id @default(cuid())
   userId   String
@@ -50,4 +54,14 @@ model Upvotes {
   user     User   @relation(fields: [userId], references: [id])
   stream   Stream @relation(fields: [streamId], references: [id])
   @@unique([streamId, userId])
+}
+
+model Space {
+  id        String   @id @default(cuid())
+  spaceName String?
+  createdAt DateTime @default(now())
+  creatorId String
+  creator   User     @relation(fields: [creatorId], references: [id])
+  streams   Stream[]
+  active Boolean @default(false)
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import prisma from "@/app/utils/utils";
+import prisma from "@/app/_utils/utils";
 import bcrypt from "bcrypt";
 import { NextRequest, NextResponse } from "next/server";
 
